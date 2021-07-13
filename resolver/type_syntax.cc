@@ -558,7 +558,14 @@ TypeSyntax::ResultType interpretTCombinator(core::Context ctx, const ast::Send &
             auto *obj = ast::cast_tree<ast::ConstantLit>(send.args[0]);
             if (!obj) {
                 if (auto e = ctx.beginError(send.loc, core::errors::Resolver::InvalidTypeDeclaration)) {
-                    e.setHeader("T.class_of needs a Class as its argument");
+                    auto type = getResultTypeWithSelfTypeParams(ctx, send.args.front(), sig, args);
+                    if (auto *o = core::cast_type<core::OrType>(type)) {
+                        spdlog::error("foo");
+                        /* return o.left.hasUntyped() || o.right.hasUntyped(); */
+                        spdlog::error("{} {}", o->left.toString(ctx.state), o->right.toString(ctx.state));
+                    } else {
+                        e.setHeader("`{}` needs a class or module as its argument", "T.class_of");
+                    }
                 }
                 return TypeSyntax::ResultType{core::Types::untypedUntracked(), core::Symbols::noClassOrModule()};
             }
